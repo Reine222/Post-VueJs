@@ -1,7 +1,8 @@
 # Post-VueJs
 Vue JS
 
-
+# lien tres utile 
+      https://stackoverflow.com/questions/58695433/django-form-in-vuejs-component-template
 
 # Post de Formulaire Avec VueJs :
 

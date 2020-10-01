@@ -130,3 +130,162 @@ Vue JS
 
 
           </script>
+# POST VU JS
+# dans la viexs
+      from django.shortcuts import render, redirect
+      from django.views.decorators.csrf import csrf_exempt
+      from django.http import JsonResponse
+      import json
+
+      @csrf_exempt
+      def registerProf(request):
+          succes = False
+          message = ""
+
+          if request.method == 'POST':
+              email = request.POST.get('email')
+              password = request.POST.get('password')
+              prenoms = request.POST.get('prenoms')
+              nom = request.POST.get('nom')
+              prof = True if request.POST.get('prof') == 'True' else False
+              print(email)
+              print("*************$", prof)
+          try:
+              if email and  password is not None and not password.isspace() and prenoms is not None and not prenoms.isspace() and nom is not None and not nom.isspace() :
+
+                  usersmail = User.objects.filter(email=email).count()
+                  if usersmail < 1 :
+                      validate_email(email)
+                      s = User(
+                          username=usernamegenerate(nom,prenoms),
+                          first_name=prenoms,
+                          last_name=nom,
+                          email=email
+                      )
+                      s.save()
+
+                      s.password=password
+                      s.set_password(s.password)
+                      s.save()
+                      profi = s.profile
+                      profi.is_prof = prof
+                      profi.save()
+                      page = render_to_string('mailing/register.html', {
+                      'nom':nom,
+                      'prenom': prenoms,
+                      })
+                      subject = 'Inscription MyProf'
+                      messagesender.sendmail("My prof","myprofci@gmail.com",email,subject,page)
+                      try:
+                          us = authenticate(username=s.username, password=password)
+                          if us.is_active:
+                              login(request, us)
+                      except:
+                          pass
+                      succes =True
+                      message = "Connexion Réussite"
+
+                  else:
+                      succes =False
+                      message = "email existe deja"
+              else:
+                  succes = False
+                  message = "Entrez des données correctes"
+
+          except Exception as e:
+              print(e)
+              succes = False
+              message = "Un probleme survenu, réessayez SVP"
+
+          datas = {
+              'succes':succes,
+              'message': message,
+              'is_prof':prof
+          }
+          return JsonResponse(datas, safe=False)
+ # dans le template
+ 
+      <script src='https://cdn.jsdelivr.net/npm/vue/dist/vue.js'></script>
+      <script src='https://unpkg.com/axios/dist/axios.min.js'></script>
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+
+      <script>
+          var app = new Vue({
+              el: "#inscripProf2",
+              data: {
+                  isregister: false,
+                  nom:"",
+                  prenoms: "",
+                  email: "",
+                  password: "",
+                  prof: 'True',
+                  base_url: window.location.protocol + "//" + window.location.host,
+                  url_post: "{% url 'post_registerProf' %}",
+                  accueil: "{% url 'connexion' %}",
+                  annonce: "{% url 'annonce1' %}"
+              },
+              delimiters: ["${", "}"],
+              methods: {
+                  registerProf: function(){
+                      if (!this.isregister) {
+                          this.error = false;
+                          this.isSuccess = false;
+                          this.isregister = true;
+                          if (this.nom == "" || this.password == "" || this.prenoms == "" || this.email == "") {
+                              Swal.fire({
+                                  icon: 'error',
+                                  title: 'Veuillez remplir correctement les champs',
+                              });
+                              this.error = true;
+                              this.isregister = false;
+                          } else {
+                              let formData = new FormData();
+                              formData.append('email', this.email);
+                              formData.append('password', this.password);
+                              formData.append('nom', this.nom);
+                              formData.append('prenoms', this.prenoms);
+                              formData.append('prof', this.prof);
+                              axios.defaults.xsrfCookieName = 'csrftoken';
+                              axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+                              axios.post(this.base_url + this.url_post,
+                                  formData,
+                                  {
+                                      headers: {
+                                          'Content-Type': 'multipart/form-data',
+                                      }
+                                  }).then((response) => {
+                                  this.isregister = false;
+                                  if (response.data.succes) {
+                                      Swal.fire({
+                                          icon: 'success',
+                                          title: response.data.message,
+                                          showConfirmButton: false,
+                                          timer: 1500
+                                      });
+
+                                      if (response.data.is_prof) {
+                                          window.location.replace(this.annonce)
+                                      } else {
+                                          window.location.replace(this.accueil)
+                                      }    
+                                  } else {
+                                      Swal.fire({
+                                          icon: 'error',
+                                          title: response.data.message,
+                                          showConfirmButton: false,
+                                          timer: 1500
+                                      });
+                                  }
+                                  console.log("success variable" + this.isSuccess)
+                              })
+                                  .catch((err) => {
+                                      console.log(err);
+                                      this.isregister = false;
+                                  })
+                          }
+                      }
+                  },
+
+              }
+          });
+      </script>

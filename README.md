@@ -408,3 +408,14 @@ Vue JS
               }
           });
       </script>
+# dans le html pour les inputs images et fichier pdf
+      <div class="col-md-6">
+        <label for="cv">Votre Curriculum Vitae</label>
+        <input v-on:change="cvfile()" ref="cvfile" type="file" id="cv">
+      </div>
+
+
+       <label for="file-ip-1">
+          Choisir une photo
+      </label>
+      <input ref="file" v-on:change="handlefile()" type="file" id="file-ip-1" accept="image/*" onchange="showPreview(event);">

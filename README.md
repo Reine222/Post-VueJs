@@ -289,3 +289,122 @@ Vue JS
               }
           });
       </script>
+# Post Vus js avec upload d'image et de fichier pdf
+      <script>
+          var app = new Vue({
+              el: "#post_prof",
+              data: {
+                  isregister: false,
+                  error : false,
+                  isSuccess: false,
+
+                  nom:"",
+                  prenoms: "",
+                  sexe:"",
+                  date_naissance:"",
+                  nationalite: "",
+                  telephone: "",
+                  email: "",
+                  discipline: "",
+                  cv: "",
+                  init:"",
+                  file:"",
+                  input:"",
+                  messages: "",
+                  message:'',
+                  pays: "",
+                  base_url: window.location.protocol + "//" + window.location.host,
+                  url_post: "{% url 'post_proffesseur' %}",
+              },
+              delimiters: ["${", "}"],
+              mounted() { 
+                  this.input = document.querySelector("#phone");
+                  this.iti = intlTelInput(this.input, {
+                      initialCountry: "ci"
+                  });
+                  console.log(this.iti.getNumber())
+                  this.pays = $("#country_selectorbt").countrySelect({
+                      preferredCountries: ['ci','fr','ml','ca','us', 'bf',],
+                      responsiveDropdown:true 
+                  });
+                  this.nationalite = this.pays[0]['value']
+              },
+              methods: {
+                  handlefile: function(){
+                      this.file = this.$refs.file.files[0];
+                  },
+
+                  cvfile: function(){
+                      this.cv = this.$refs.cvfile.files[0];
+                  },
+                  registerProf: function(){
+                      this.telephone = this.iti.getNumber()
+                      this.nationalite = this.pays[0]['value']
+                      if (!this.isregister) {
+                          this.isregister = true;
+                          if (this.nom == "" || this.prenoms == "" || this.sexe == ""  || this.date_naissance == ""  || this.telephone == "" || this.email == "" || this.discipline == "" || this.messages == "") {
+                              this.message = "Veuillez remplir tous les champs du formulaire s'il vous plaît."
+                              this.isSuccess = false
+                              this.error = true;
+                              this.isregister = false;
+                          } else {
+                              let formData = new FormData();
+                              formData.append('nom', this.nom);
+                              formData.append('prenoms', this.prenoms);
+                              formData.append('sexe', this.sexe);
+                              formData.append('photo', this.file);
+                              formData.append('date_naissance', this.date_naissance);
+                              formData.append('nationalite', this.nationalite);
+                              formData.append('telephone', this.telephone);
+                              formData.append('email', this.email);
+                              formData.append('discipline', this.discipline);
+                              formData.append('cv', this.cv);
+                              formData.append('message', this.messages);
+
+                              axios.defaults.xsrfCookieName = 'csrftoken';
+                              axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+                              axios.post(this.url_post,
+                                  formData,
+                                  {
+                                      headers: {
+                                          'Content-Type': 'multipart/form-data',
+                                      }
+                                  }).then((response) => {
+                                  if (response.data.succes) {
+                                      this.isSuccess = true
+                                      this.isregister = false;
+                                      this.error = false
+
+                                      this.message = response.data.message
+                                      this.nom = ""
+                                      this.prenoms = ""
+                                      this.masculin = ""
+                                      this.feminin = ""
+                                      this.photo = ""
+                                      this.date_naissance = ""
+                                      this.nationalite = ""
+                                      this.telephone = ""
+                                      this.email = ""
+                                      this.discipline = ""
+                                      this.cv = ""
+                                      this.messages = ""
+
+                                  } else {
+                                      this.message = response.data.message
+                                      this.error = true;
+                                      this.isSuccess = false
+                                      this.isregister = false;
+                                  }
+                                  console.log("success variable" + this.isSuccess)
+                              })
+                              .catch((err) => {
+                                  console.log(err);
+                                  this.isregister = false;
+                              })
+                          }
+                      }
+                  },
+
+              }
+          });
+      </script>

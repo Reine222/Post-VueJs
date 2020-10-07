@@ -419,3 +419,95 @@ Vue JS
           Choisir une photo
       </label>
       <input ref="file" v-on:change="handlefile()" type="file" id="file-ip-1" accept="image/*" onchange="showPreview(event);">
+
+
+# SCROLL INFINIE VU JS
+      <script src='https://cdn.jsdelivr.net/npm/vue/dist/vue.js'></script>
+      <script src='https://unpkg.com/axios/dist/axios.min.js'></script>
+
+      <script>
+          var app = new Vue({
+              el: '#module_id',
+              data: {
+                  post_url:"{% url 'get_module' %}",
+                  items: [],
+                  endOfTheScreen: false,
+                  isLoading: false,
+                  pageno: 1,
+                  limit: 1,
+                  posts: [],
+                  affiches: [],
+                  showbtn: false,
+                  startIndex:0,
+                  endIndex : 4,
+                  autoLoading: true,
+                  loadder :false,
+              },
+              delimiters: ["${", "}"],
+              mounted(){
+                  console.log('hello')
+
+              },
+              watch: {
+                  endOfTheScreen(endOfTheScreen) {
+                      if (endOfTheScreen === true && this.autoLoading) {
+
+                          if(this.affiches.length < this.posts.length){
+                              this.loadder = true;
+                              setTimeout(()=>{
+                                  this.loadder = false;
+                                  this.afficheModule(this.startIndex, this.endIndex);
+                              }, 2000)
+
+
+                          }    
+                      }
+                  }
+              },
+              created() {
+                  window.onscroll = () => {
+                      this.endOfTheScreen = this.scrollCheck();
+                  };
+              },
+              async mounted() {
+                  await this.affichageModule();
+
+              },
+              methods: {
+                  scrollCheck() {
+                      return window.scrollY + window.innerHeight === document.documentElement.offsetHeight;
+                  },
+                  affichageModule: function() {
+                      this.showbtn = false;
+                      this.isLoading = true;
+                      axios.defaults.xsrfCookieName = 'csrftoken';
+                      axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+                      axios.get(this.post_url).then(response => {
+                          this.items = response.data.modules
+                          for (let i in this.items) {
+                              console.log(i, "postrd")
+                              if (i <= this.items.length){
+                                  this.posts.push(this.items[i]);  
+                              }
+
+                          }
+                          this.isLoading = false;
+                          this.showbtn = true;
+                          this.afficheModule(this.startIndex, this.endIndex)
+                      }).catch((err) => {
+                          console.log(err)
+                      })
+                  },
+                  afficheModule: function(start , end) {
+                      this.affiches = [...this.affiches , ...this.posts.slice(start,end)] 
+                      console.log(this.affiches, this.endIndex)
+                      if(this.affiches.length >0 && this.posts.length > end){
+                              this.startIndex = end 
+                              this.endIndex = end+4
+
+                          }
+
+                  },
+              },
+          })
+      </script>

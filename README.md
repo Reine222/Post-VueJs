@@ -422,14 +422,14 @@ Vue JS
 
 
 # SCROLL INFINIE VU JS
-      <script src='https://cdn.jsdelivr.net/npm/vue/dist/vue.js'></script>
+     <script src='https://cdn.jsdelivr.net/npm/vue/dist/vue.js'></script>
       <script src='https://unpkg.com/axios/dist/axios.min.js'></script>
 
       <script>
           var app = new Vue({
-              el: '#module_id',
+              el: '#agenda_id',
               data: {
-                  post_url:"{% url 'get_module' %}",
+                  post_url:"{% url 'get_agenda' %}",
                   items: [],
                   endOfTheScreen: false,
                   isLoading: false,
@@ -439,15 +439,12 @@ Vue JS
                   affiches: [],
                   showbtn: false,
                   startIndex:0,
-                  endIndex : 4,
+                  endIndex : 3,
                   autoLoading: true,
                   loadder :false,
+                  first_load: true,
               },
               delimiters: ["${", "}"],
-              mounted(){
-                  console.log('hello')
-
-              },
               watch: {
                   endOfTheScreen(endOfTheScreen) {
                       if (endOfTheScreen === true && this.autoLoading) {
@@ -459,7 +456,6 @@ Vue JS
                                   this.afficheModule(this.startIndex, this.endIndex);
                               }, 2000)
 
-
                           }    
                       }
                   }
@@ -470,20 +466,25 @@ Vue JS
                   };
               },
               async mounted() {
-                  await this.affichageModule();
+                  await this.affichageAgenda();
 
               },
+              updated: function () {
+                  this.$nextTick(function () {
+                    this.first_load = false
+                  })
+                },
               methods: {
                   scrollCheck() {
                       return window.scrollY + window.innerHeight === document.documentElement.offsetHeight;
                   },
-                  affichageModule: function() {
+                  affichageAgenda: function() {
                       this.showbtn = false;
                       this.isLoading = true;
                       axios.defaults.xsrfCookieName = 'csrftoken';
                       axios.defaults.xsrfHeaderName = 'X-CSRFToken';
                       axios.get(this.post_url).then(response => {
-                          this.items = response.data.modules
+                          this.items = response.data.agendas
                           for (let i in this.items) {
                               console.log(i, "postrd")
                               if (i <= this.items.length){
@@ -503,11 +504,20 @@ Vue JS
                       console.log(this.affiches, this.endIndex)
                       if(this.affiches.length >0 && this.posts.length > end){
                               this.startIndex = end 
-                              this.endIndex = end+4
+                              this.endIndex = end+3
 
                           }
 
                   },
+                  truncate: function(text){
+                      let length = 250
+                      let suffix = '...'
+                      if (text.length > length) {
+                          return text.slice(0, length) + suffix;
+                      } else {
+                          return text;
+                      }
+                  }
               },
           })
       </script>

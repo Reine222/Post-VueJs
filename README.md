@@ -521,3 +521,122 @@ Vue JS
               },
           })
       </script>
+
+# SCROLL INFINIE GRAPHQL
+
+      <script>
+        var ma_vue2 = new Vue({
+          el: '#graph_service',
+          data: {
+            resultats :[],
+            base_url: window.location.protocol + "//" + window.location.host + '/',
+            next: false,
+            is_start: false,
+            after: '',
+          },
+          delimiters: ["${", "}"],
+          mounted () {
+            this.getservices()
+          },
+          created(){
+            window.addEventListener('scroll', (e)=>{
+                this.verif()
+            })
+          },
+          methods: {
+            verif: function(e){
+              if (this.is_start){return}
+
+              var bod = document.querySelector("body")
+              if (window.scrollY >= parseInt((bod.clientHeight * 50) / 100)){
+                if (this.next){
+                  this.get_next_services()
+                }
+
+              }
+            },
+            getservices: function () {
+              this.is_start = true
+              axios.defaults.xsrfCookieName = 'csrftoken'
+              axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+              axios({
+                url : this.base_url + 'graphql',
+                method : 'post',
+                data : {
+                  query: `
+                  query{
+                    allServices(first:3 status:true){
+                      edges{
+                        node{
+                          id
+                          titre
+                          icon
+                          description
+                          status
+                        }
+                        cursor
+                      }
+                      pageInfo{
+                        endCursor
+                        hasNextPage
+                      }
+                    }
+                  }
+                  `
+                }
+              }).then(response => {
+                this.resultats = response.data.data.allServices.edges;  
+                this.next = response.data.data.allServices.pageInfo.hasNextPage;  
+                this.after = response.data.data.allServices.pageInfo.endCursor;  
+                this.is_start = false;  
+                console.log(response.data.data.allServices.edges); 
+              })
+              .catch((err) => {
+                // console.log(err)
+              })
+            },
+
+            get_next_services: function () {
+              this.is_start = true
+              axios.defaults.xsrfCookieName = 'csrftoken'
+              axios.defaults.xsrfHeaderName = 'X-CSRFToken'
+              axios({
+                url : this.base_url + 'graphql',
+                method : 'post',
+                data : {
+                  query: `
+                    query{
+                      allServices(first:3 after:"` + this.after + `" status:true){
+                        edges{
+                          node{
+                            id
+                            titre
+                            icon
+                            description
+                            status
+                          }
+                          cursor
+                        }
+                        pageInfo{
+                          endCursor
+                          hasNextPage
+                        }
+                      }
+                    }
+                  `
+                }
+              }).then(response => {
+                this.resultats = this.resultats.concat(response.data.data.allServices.edges);
+                this.next = response.data.data.allServices.pageInfo.hasNextPage;  
+                this.after = response.data.data.allServices.pageInfo.endCursor;  
+                this.is_start = false;  
+                console.log(response.data.data.allServices.edges); 
+              })
+              .catch((err) => {
+                // console.log(err)
+              })
+            },
+          }
+        })
+
+      </script>

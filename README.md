@@ -640,3 +640,6 @@ Vue JS
         })
 
       </script>
+
+# SCROLL INFINIE API REST OU PAGINATION API Rest
+  https://medium.com/@fk26541598fk/django-rest-framework-apiview-implementation-pagination-mixin-c00c34da8ac2

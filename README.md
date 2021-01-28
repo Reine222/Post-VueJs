@@ -1,6 +1,7 @@
 # Post-VueJs
 Vue JS
-
+# lien en vuejs :
+           :href="``+`/actualites/details-news/`+`${ item.slug }`+``"
 # lien tres utile 
       https://stackoverflow.com/questions/58695433/django-form-in-vuejs-component-template
 
